@@ -108,38 +108,7 @@ func (p *ClaudeProvider) getChatRequest(claudeRequest *ClaudeRequest) (*http.Req
 		headers["anthropic-beta"] = "output-128k-2025-02-19"
 	}
 
-	// 处理额外参数
-	customParams, err := p.CustomParameterHandler()
-	if err != nil {
-		return nil, common.ErrorWrapperLocal(err, "custom_parameter_error", http.StatusInternalServerError)
-	}
-	// 如果有额外参数，将其添加到请求体中
-	if customParams != nil {
-		// 将请求体转换为map，以便添加额外参数
-		var requestMap map[string]interface{}
-		requestBytes, err := json.Marshal(claudeRequest)
-		if err != nil {
-			return nil, common.ErrorWrapperLocal(err, "marshal_request_failed", http.StatusInternalServerError)
-		}
-
-		err = json.Unmarshal(requestBytes, &requestMap)
-		if err != nil {
-			return nil, common.ErrorWrapperLocal(err, "unmarshal_request_failed", http.StatusInternalServerError)
-		}
-
-		// 处理自定义额外参数
-		requestMap = p.mergeCustomParams(requestMap, customParams)
-
-		// 使用修改后的请求体创建请求
-		req, err := p.Requester.NewRequest(http.MethodPost, fullRequestURL, p.Requester.WithBody(requestMap), p.Requester.WithHeader(headers))
-		if err != nil {
-			return nil, common.ErrorWrapperLocal(err, "new_request_failed", http.StatusInternalServerError)
-		}
-
-		return req, nil
-	}
-
-	// 如果没有额外参数，使用原始请求体创建请求
+	// 创建请求
 	req, err := p.Requester.NewRequest(http.MethodPost, fullRequestURL, p.Requester.WithBody(claudeRequest), p.Requester.WithHeader(headers))
 	if err != nil {
 		return nil, common.ErrorWrapperLocal(err, "new_request_failed", http.StatusInternalServerError)
