@@ -61,11 +61,19 @@ const validateSingleMode = (t, values, rows) => {
     return t('pricing_edit.modelNameRe');
   }
 
-  if (values.input === '' || values.input < 0) {
-    return t('pricing_edit.inputVal');
-  }
-  if (values.output === '' || values.output < 0) {
-    return t('pricing_edit.outputVal');
+  // 按次计费时只验证单次价格（input字段）
+  if (values.type === 'times') {
+    if (values.input === '' || values.input < 0) {
+      return t('pricing_edit.inputVal');
+    }
+  } else {
+    // 按Token计费时验证输入输出价格
+    if (values.input === '' || values.input < 0) {
+      return t('pricing_edit.inputVal');
+    }
+    if (values.output === '' || values.output < 0) {
+      return t('pricing_edit.outputVal');
+    }
   }
   return false;
 };
@@ -76,8 +84,14 @@ const getValidationSchema = (t) =>
     is_edit: Yup.boolean(),
     type: Yup.string().oneOf(['tokens', 'times'], t('pricing_edit.typeErr')).required(t('pricing_edit.requiredType')),
     channel_type: Yup.number().min(1, t('pricing_edit.channelTypeErr')).required(t('pricing_edit.requiredChannelType')),
-    input: Yup.number().required(t('pricing_edit.requiredInput')),
-    output: Yup.number().required(t('pricing_edit.requiredOutput')),
+    input: Yup.number()
+      .required(t('pricing_edit.requiredInput'))
+      .test('isPositive', t('pricing_edit.inputVal'), (value) => value !== '' && value >= 0),
+    output: Yup.number().when('type', {
+      is: 'tokens',
+      then: (schema) => schema.required(t('pricing_edit.requiredOutput')).test('isPositive', t('pricing_edit.outputVal'), (value) => value !== '' && value >= 0),
+      otherwise: (schema) => schema.notRequired().nullable().transform((value) => value === undefined || value === '' ? null : value)
+    }),
     models: Yup.array().min(1, t('pricing_edit.requiredModels'))
   });
 
@@ -137,7 +151,7 @@ const EditModal = ({
         return 0;
       }
       if (unitType === 'rate') {
-        return price;
+        return Number(price);
       }
 
       let priceValue = new Decimal(price);
@@ -186,7 +200,7 @@ const EditModal = ({
           break;
         case 'USD':
         case 'RMB':
-          endAdornment = value === 0 ? 'Free' : calculateRate(value) + ' Rate';
+          endAdornment = Number(value) === 0 ? 'Free' : calculateRate(value) + ' Rate';
           break;
       }
 
@@ -210,6 +224,15 @@ const EditModal = ({
   const submit = async (values, { setErrors, setStatus, setSubmitting }) => {
     setSubmitting(true);
 
+    // Ensure extra_ratios values are numbers
+    if (values.extra_ratios) {
+      const processedRatios = {};
+      Object.keys(values.extra_ratios).forEach((key) => {
+        processedRatios[key] = Number(values.extra_ratios[key]);
+      });
+      values.extra_ratios = processedRatios;
+    }
+
     // 单一模式处理
     if (singleMode) {
       // 验证表单
@@ -222,10 +245,12 @@ const EditModal = ({
 
       try {
         if (onSaveSingle) {
+          const calculatedInput = calculateRate(values.input);
+          const calculatedOutput = values.type === 'times' ? calculatedInput : calculateRate(values.output);
           await onSaveSingle({
             ...values,
-            input: calculateRate(values.input),
-            output: calculateRate(values.output)
+            input: calculatedInput,
+            output: calculatedOutput
           });
         }
         setSubmitting(false);
@@ -240,6 +265,8 @@ const EditModal = ({
     // 多选模式处理
     values.models = trims(values.models);
     try {
+      const calculatedInput = calculateRate(values.input);
+      const calculatedOutput = values.type === 'times' ? calculatedInput : calculateRate(values.output);
       const res = await API.post(`/api/prices/multiple`, {
         original_models: inputs.models,
         models: values.models,
@@ -247,8 +274,8 @@ const EditModal = ({
           model: 'batch',
           type: values.type,
           channel_type: values.channel_type,
-          input: calculateRate(values.input),
-          output: calculateRate(values.output),
+          input: calculatedInput,
+          output: calculatedOutput,
           locked: values.locked,
           extra_ratios: values.extra_ratios
         }
@@ -282,7 +309,7 @@ const EditModal = ({
 
     let finalValue;
     if (name === 'input' || name === 'output') {
-      finalValue = value === '' ? 0 : Number(value);
+      finalValue = value;
     } else {
       finalValue = name === 'locked' ? checked : value;
     }
@@ -454,12 +481,16 @@ const EditModal = ({
     const onChange = singleMode ? handleChange : formikHandleChange;
     const errorState = singleMode ? !!errors.input : Boolean(touched?.input && errors?.input);
 
+    // 根据类型决定 label
+    const currentType = singleMode ? inputs.type : values?.type;
+    const inputLabel = currentType === 'times' ? t('modelpricePage.timesPrice') : t('modelpricePage.inputMultiplier');
+
     return (
       <FormControl fullWidth error={errorState} sx={{ ...theme.typography.otherInput }}>
-        <InputLabel htmlFor="channel-input-label">{t('modelpricePage.inputMultiplier')}</InputLabel>
+        <InputLabel htmlFor="channel-input-label">{inputLabel}</InputLabel>
         <OutlinedInput
           id="channel-input-label"
-          label={t('modelpricePage.inputMultiplier')}
+          label={inputLabel}
           type="number"
           value={value}
           name="input"
@@ -643,8 +674,8 @@ const EditModal = ({
             onClick={() =>
               submit(inputs, {
                 setErrors,
-                setStatus: () => {},
-                setSubmitting: () => {}
+                setStatus: () => { },
+                setSubmitting: () => { }
               })
             }
             variant="contained"
@@ -687,7 +718,7 @@ const EditModal = ({
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               {renderInputField()}
-              {renderOutputField()}
+              {inputs.type === 'tokens' && renderOutputField()}
             </Stack>
 
             {renderLockedToggle()}
@@ -711,8 +742,10 @@ const EditModal = ({
                 {renderTypeSelector(formProps)}
                 {renderChannelTypeSelector(formProps)}
                 {renderUnitTypeToggle()}
-                {renderInputField(formProps)}
-                {renderOutputField(formProps)}
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                  {renderInputField(formProps)}
+                  {formProps.values.type === 'tokens' && renderOutputField(formProps)}
+                </Stack>
                 {renderModelSelector(formProps)}
                 {renderLockedToggle(formProps)}
                 <Alert severity="warning">{t('pricing_edit.lockedTip')}</Alert>

@@ -113,8 +113,15 @@ export default function Users() {
       case 'status':
         valueData = { username, action: value === 1 ? 'enable' : 'disable' };
         break;
-      case 'role':
-        valueData = { username, action: value === true ? 'promote' : 'demote' };
+      case 'set_role':
+        // value 是目标角色：1=普通用户, 3=可信内部员工, 10=管理员
+        if (value === 1) {
+          valueData = { username, action: 'demote' };
+        } else if (value === 3) {
+          valueData = { username, action: 'set_reliable' };
+        } else if (value === 10) {
+          valueData = { username, action: 'promote' };
+        }
         break;
       case 'quota':
         url = `/api/user/quota/${username}`;
@@ -211,6 +218,8 @@ export default function Users() {
                   { id: 'role', label: t('userPage.userRole'), disableSort: false },
                   { id: 'bind', label: t('userPage.bind'), disableSort: true },
                   { id: 'created_time', label: t('userPage.creationTime'), disableSort: false },
+                  { id: 'last_login_time', label: t('userPage.lastLoginTime'), disableSort: false },
+                  { id: 'last_login_ip', label: t('userPage.lastLoginIP'), disableSort: false },
                   { id: 'status', label: t('userPage.status'), disableSort: false },
                   { id: 'action', label: t('userPage.action'), disableSort: true }
                 ]}

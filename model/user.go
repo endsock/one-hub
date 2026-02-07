@@ -9,7 +9,9 @@ import (
 	"one-api/common/redis"
 	"one-api/common/utils"
 	"strings"
+	"time"
 
+	"github.com/go-webauthn/webauthn/webauthn"
 	"gorm.io/gorm"
 )
 
@@ -42,6 +44,7 @@ type User struct {
 	AffHistoryQuota  int            `json:"aff_history_quota" gorm:"type:int;default:0;column:aff_history"`
 	InviterId        int            `json:"inviter_id" gorm:"type:int;column:inviter_id;index"`
 	LastLoginTime    int64          `json:"last_login_time" gorm:"bigint;default:0"`
+	LastLoginIp      string         `json:"last_login_ip" gorm:"type:varchar(128);default:''"`
 	CreatedTime      int64          `json:"created_time" gorm:"bigint"`
 	DeletedAt        gorm.DeletedAt `json:"-" gorm:"index"`
 }
@@ -55,11 +58,13 @@ func GetMaxUserId() int {
 }
 
 var allowedUserOrderFields = map[string]bool{
-	"id":           true,
-	"username":     true,
-	"role":         true,
-	"status":       true,
-	"created_time": true,
+	"id":              true,
+	"username":        true,
+	"role":            true,
+	"status":          true,
+	"created_time":    true,
+	"last_login_time": true,
+	"last_login_ip":   true,
 }
 
 func GetUsersList(params *GenericParams) (*DataResult[User], error) {
@@ -379,6 +384,19 @@ func IsAdmin(userId int) bool {
 	return user.Role >= config.RoleAdminUser
 }
 
+func IsReliable(userId int) bool {
+	if userId == 0 {
+		return false
+	}
+	var user User
+	err := DB.Where("id = ?", userId).Select("role").Find(&user).Error
+	if err != nil {
+		logger.SysError("no such user " + err.Error())
+		return false
+	}
+	return user.Role >= config.RoleReliableUser
+}
+
 func IsUserEnabled(userId int) (bool, error) {
 	if userId == 0 {
 		return false, errors.New("user id is empty")
@@ -564,4 +582,100 @@ func ChangeUserQuota(id int, quota int, isRecharge bool) (err error) {
 	}
 
 	return nil
+}
+
+// WebAuthn 相关方法，实现 webauthn.User 接口
+func (user *User) WebAuthnID() []byte {
+	return []byte(fmt.Sprintf("%d", user.Id))
+}
+
+func (user *User) WebAuthnName() string {
+	return user.Username
+}
+
+func (user *User) WebAuthnDisplayName() string {
+	if user.DisplayName != "" {
+		return user.DisplayName
+	}
+	return user.Username
+}
+
+func (user *User) WebAuthnIcon() string {
+	return user.AvatarUrl
+}
+
+func (user *User) WebAuthnCredentials() []webauthn.Credential {
+	credentials := GetUserWebAuthnCredentials(user.Id)
+	return credentials
+}
+
+// WebAuthnCredential 表示WebAuthn凭据
+type WebAuthnCredential struct {
+	Id              int    `json:"id" gorm:"primaryKey"`
+	UserId          int    `json:"user_id" gorm:"index"`
+	CredentialId    []byte `json:"credential_id" gorm:"unique;size:255"`
+	PublicKey       []byte `json:"public_key"`
+	AttestationType string `json:"attestation_type"`
+	Alias           string `json:"alias" gorm:"type:varchar(255);default:''"`
+	// Persist essential authenticator state and flags used during login validation
+	BackupEligible bool                   `json:"backup_eligible" gorm:"column:backup_eligible;default:false"`
+	BackupState    bool                   `json:"backup_state" gorm:"column:backup_state;default:false"`
+	Authenticator  webauthn.Authenticator `json:"authenticator" gorm:"embedded"`
+	CreatedTime    int64                  `json:"created_time"`
+}
+
+func (WebAuthnCredential) TableName() string {
+	return "webauthn_credentials"
+}
+
+// 获取用户的WebAuthn凭据
+func GetUserWebAuthnCredentials(userId int) []webauthn.Credential {
+	var credentials []WebAuthnCredential
+	DB.Where("user_id = ?", userId).Find(&credentials)
+
+	var webauthnCredentials []webauthn.Credential
+	for _, cred := range credentials {
+		webauthnCredentials = append(webauthnCredentials, webauthn.Credential{
+			ID:              cred.CredentialId,
+			PublicKey:       cred.PublicKey,
+			AttestationType: cred.AttestationType,
+			Authenticator:   cred.Authenticator,
+			Flags: webauthn.CredentialFlags{
+				UserPresent:    false, // will be updated by library during validation
+				UserVerified:   false, // will be updated by library during validation
+				BackupEligible: cred.BackupEligible,
+				BackupState:    cred.BackupState,
+			},
+		})
+	}
+	return webauthnCredentials
+}
+
+// 保存WebAuthn凭据
+func SaveWebAuthnCredential(userId int, credential *webauthn.Credential, alias string) error {
+	if alias == "" {
+		alias = time.Now().Format("20060102150405")
+	}
+	webauthnCred := WebAuthnCredential{
+		UserId:          userId,
+		CredentialId:    credential.ID,
+		PublicKey:       credential.PublicKey,
+		AttestationType: credential.AttestationType,
+		Alias:           alias,
+		BackupEligible:  credential.Flags.BackupEligible,
+		BackupState:     credential.Flags.BackupState,
+		Authenticator:   credential.Authenticator,
+		CreatedTime:     time.Now().Unix(),
+	}
+	return DB.Create(&webauthnCred).Error
+}
+
+// GetUserByWebAuthnCredentialId 通过WebAuthn凭据ID获取用户
+func GetUserByWebAuthnCredentialId(credentialId []byte) (*User, error) {
+	var cred WebAuthnCredential
+	err := DB.Where("credential_id = ?", credentialId).First(&cred).Error
+	if err != nil {
+		return nil, err
+	}
+	return GetUserById(cred.UserId, false)
 }

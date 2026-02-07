@@ -104,7 +104,11 @@ func (p *GeminiProvider) getChatRequest(geminiRequest *GeminiChatRequest, isRela
 
 	var body any
 	if isRelay {
-		body = geminiRequest.GetJsonRaw()
+		var exists bool
+		body, exists = p.GetRawBody()
+		if !exists {
+			return nil, common.StringErrorWrapperLocal("request body not found", "request_body_not_found", http.StatusInternalServerError)
+		}
 	} else {
 		p.pluginHandle(geminiRequest)
 		body = geminiRequest
@@ -159,13 +163,38 @@ func ConvertFromChatOpenai(request *types.ChatCompletionRequest) (*GeminiChatReq
 		},
 	}
 
-	if strings.HasPrefix(request.Model, "gemini-2.0-flash-exp") {
+	if strings.HasPrefix(request.Model, "gemini-2.0-flash-exp") || strings.HasPrefix(request.Model, "gemini-2.5-flash-image-preview") {
 		geminiRequest.GenerationConfig.ResponseModalities = []string{"Text", "Image"}
 	}
 
+	if strings.HasSuffix(request.Model, "-tts") {
+		geminiRequest.GenerationConfig.ResponseModalities = []string{"AUDIO"}
+	}
+
 	if request.Reasoning != nil {
-		geminiRequest.GenerationConfig.ThinkingConfig = &ThinkingConfig{
-			ThinkingBudget: &request.Reasoning.MaxTokens,
+		thinkingConfig := &ThinkingConfig{}
+		
+		// Set ThinkingBudget when MaxTokens >= 0
+		if request.Reasoning.MaxTokens >= 0 {
+			thinkingConfig.ThinkingBudget = &request.Reasoning.MaxTokens
+		}
+		
+		// Convert effort to thinkingLevel
+		if request.Reasoning.Effort != "" {
+			effortToLevelMap := map[string]string{
+				"minimal": "MINIMAL",
+				"low":     "LOW",
+				"medium":  "MEDIUM",
+				"high":    "HIGH",
+			}
+			if level, ok := effortToLevelMap[request.Reasoning.Effort]; ok {
+				thinkingConfig.ThinkingLevel = level
+			}
+		}
+		
+		// Only set ThinkingConfig if at least one parameter is set
+		if thinkingConfig.ThinkingBudget != nil || thinkingConfig.ThinkingLevel != "" {
+			geminiRequest.GenerationConfig.ThinkingConfig = thinkingConfig
 		}
 	}
 
@@ -399,15 +428,17 @@ func (h *GeminiStreamHandler) convertToOpenaiStream(geminiResponse *GeminiChatRe
 		dataChan <- string(responseBody)
 	}
 
+	h.Usage.TextBuilder.WriteString(streamResponse.GetResponseText())
+
 	// 和ExecutableCode的tokens共用，所以跳过
 	if geminiResponse.UsageMetadata == nil {
 		return
 	}
 
-	h.Usage.PromptTokens = geminiResponse.UsageMetadata.PromptTokenCount
-	h.Usage.CompletionTokens = geminiResponse.UsageMetadata.CandidatesTokenCount + geminiResponse.UsageMetadata.ThoughtsTokenCount
-	h.Usage.CompletionTokensDetails.ReasoningTokens = geminiResponse.UsageMetadata.ThoughtsTokenCount
-	h.Usage.TotalTokens = geminiResponse.UsageMetadata.TotalTokenCount
+	usage := ConvertOpenAIUsage(geminiResponse.UsageMetadata)
+
+	usage.TextBuilder = h.Usage.TextBuilder
+	*h.Usage = usage
 }
 
 const tokenThreshold = 1000000
@@ -453,7 +484,15 @@ var modelAdjustRatios = map[string]int{
 // }
 
 func ConvertOpenAIUsage(geminiUsage *GeminiUsageMetadata) types.Usage {
-	return types.Usage{
+	if geminiUsage == nil {
+		return types.Usage{
+			PromptTokens:     0,
+			CompletionTokens: 0,
+			TotalTokens:      0,
+		}
+	}
+
+	usage := types.Usage{
 		PromptTokens:     geminiUsage.PromptTokenCount,
 		CompletionTokens: geminiUsage.CandidatesTokenCount + geminiUsage.ThoughtsTokenCount,
 		TotalTokens:      geminiUsage.TotalTokenCount,
@@ -462,6 +501,28 @@ func ConvertOpenAIUsage(geminiUsage *GeminiUsageMetadata) types.Usage {
 			ReasoningTokens: geminiUsage.ThoughtsTokenCount,
 		},
 	}
+
+	for _, p := range geminiUsage.PromptTokensDetails {
+		switch p.Modality {
+		case "TEXT":
+			usage.PromptTokensDetails.TextTokens = p.TokenCount
+		case "AUDIO":
+			usage.PromptTokensDetails.AudioTokens = p.TokenCount
+		}
+	}
+
+	for _, c := range geminiUsage.CandidatesTokensDetails {
+		switch c.Modality {
+		case "TEXT":
+			usage.CompletionTokensDetails.TextTokens = c.TokenCount
+		case "AUDIO":
+			usage.CompletionTokensDetails.AudioTokens = c.TokenCount
+		case "IMAGE":
+			usage.CompletionTokensDetails.ImageTokens = c.TokenCount
+		}
+	}
+
+	return usage
 }
 
 func (p *GeminiProvider) pluginHandle(request *GeminiChatRequest) {

@@ -20,6 +20,8 @@ type Quota struct {
 	promptTokens     int
 	price            model.Price
 	groupName        string
+	isBackupGroup    bool // 新增字段记录是否使用备用分组
+	backupGroupName  string
 	groupRatio       float64
 	inputRatio       float64
 	outputRatio      float64
@@ -28,6 +30,7 @@ type Quota struct {
 	userId           int
 	channelId        int
 	tokenId          int
+	unlimitedQuota   bool
 	HandelStatus     bool
 
 	startTime         time.Time
@@ -36,22 +39,28 @@ type Quota struct {
 }
 
 func NewQuota(c *gin.Context, modelName string, promptTokens int) *Quota {
+	isBackupGroup := c.GetBool("is_backupGroup")
+
 	quota := &Quota{
-		modelName:    modelName,
-		promptTokens: promptTokens,
-		userId:       c.GetInt("id"),
-		channelId:    c.GetInt("channel_id"),
-		tokenId:      c.GetInt("token_id"),
-		HandelStatus: false,
+		modelName:      modelName,
+		promptTokens:   promptTokens,
+		userId:         c.GetInt("id"),
+		channelId:      c.GetInt("channel_id"),
+		tokenId:        c.GetInt("token_id"),
+		unlimitedQuota: c.GetBool("token_unlimited_quota"),
+		HandelStatus:   false,
+		isBackupGroup:  isBackupGroup, // 记录是否使用备用分组
 	}
 
 	quota.price = *model.PricingInstance.GetPrice(quota.modelName)
-	quota.groupRatio = c.GetFloat64("group_ratio")
 	quota.groupName = c.GetString("token_group")
+	quota.backupGroupName = c.GetString("token_backup_group")
+	quota.groupRatio = c.GetFloat64("group_ratio") // 这里的倍率已经在 common.go 中正确设置了
 	quota.inputRatio = quota.price.GetInput() * quota.groupRatio
 	quota.outputRatio = quota.price.GetOutput() * quota.groupRatio
 
 	return quota
+
 }
 
 func (q *Quota) PreQuotaConsumption() *types.OpenAIErrorWithStatusCode {
@@ -138,7 +147,7 @@ func (q *Quota) completedQuotaConsumption(usage *types.Usage, tokenName string, 
 
 	if quota > 0 {
 		quotaDelta := quota - q.preConsumedQuota
-		err := model.PostConsumeTokenQuota(q.tokenId, quotaDelta)
+		err := model.PostConsumeTokenQuotaWithInfo(q.tokenId, q.userId, q.unlimitedQuota, quotaDelta)
 		if err != nil {
 			return errors.New("error consuming token remain quota: " + err.Error())
 		}
@@ -170,11 +179,10 @@ func (q *Quota) completedQuotaConsumption(usage *types.Usage, tokenName string, 
 }
 
 func (q *Quota) Undo(c *gin.Context) {
-	tokenId := c.GetInt("token_id")
 	if q.HandelStatus {
 		go func(ctx context.Context) {
 			// return pre-consumed quota
-			err := model.PostConsumeTokenQuota(tokenId, -q.preConsumedQuota)
+			err := model.PostConsumeTokenQuotaWithInfo(q.tokenId, q.userId, q.unlimitedQuota, -q.preConsumedQuota)
 			if err != nil {
 				logger.LogError(ctx, "error return pre-consumed quota: "+err.Error())
 			}
@@ -200,11 +208,13 @@ func (q *Quota) GetInputRatio() float64 {
 
 func (q *Quota) GetLogMeta(usage *types.Usage) map[string]any {
 	meta := map[string]any{
-		"group_name":   q.groupName,
-		"price_type":   q.price.Type,
-		"group_ratio":  q.groupRatio,
-		"input_ratio":  q.price.GetInput(),
-		"output_ratio": q.price.GetOutput(),
+		"group_name":        q.groupName,
+		"backup_group_name": q.backupGroupName,
+		"is_backup_group":   q.isBackupGroup, // 添加是否使用备用分组的标识
+		"price_type":        q.price.Type,
+		"group_ratio":       q.groupRatio,
+		"input_ratio":       q.price.GetInput(),
+		"output_ratio":      q.price.GetOutput(),
 	}
 
 	firstResponseTime := q.GetFirstResponseTime()

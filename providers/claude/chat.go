@@ -152,7 +152,6 @@ func ConvertFromChatOpenai(request *types.ChatCompletionRequest) (*ClaudeRequest
 	claudeRequest := ClaudeRequest{
 		Model:         request.Model,
 		Messages:      make([]Message, 0),
-		System:        "",
 		MaxTokens:     request.MaxTokens,
 		StopSequences: nil,
 		Temperature:   request.Temperature,
@@ -172,17 +171,32 @@ func ConvertFromChatOpenai(request *types.ChatCompletionRequest) (*ClaudeRequest
 		}
 	}
 
+	// 处理 system 字段（支持 cache_control）
 	systemMessage := ""
 	mgsLen := len(request.Messages) - 1
 	isThink := (request.OneOtherArg == "thinking" || request.Reasoning != nil)
 
+	// 如果请求中已经有 system 字段（如数组格式带 cache_control），直接使用
+	if request.System != nil {
+		// 检查是否为空字符串，避免传递空 system 字段
+		if str, ok := request.System.(string); ok && str == "" {
+			// 空字符串不设置，保持为 nil
+		} else {
+			claudeRequest.System = request.System
+		}
+	}
+
+	// 处理 messages
 	for index, msg := range request.Messages {
 		if isThink && index == mgsLen && (msg.Role == types.ChatMessageRoleAssistant || msg.Role == types.ChatMessageRoleSystem) {
 			msg.Role = types.ChatMessageRoleUser
 		}
 
 		if msg.Role == types.ChatMessageRoleSystem {
-			systemMessage += msg.StringContent()
+			// 如果没有预设的 system 字段，从 messages 中提取
+			if request.System == nil {
+				systemMessage += msg.StringContent()
+			}
 			continue
 		}
 		messageContent, err := convertMessageContent(&msg)
@@ -194,7 +208,8 @@ func ConvertFromChatOpenai(request *types.ChatCompletionRequest) (*ClaudeRequest
 		}
 	}
 
-	if systemMessage != "" {
+	// 如果没有预设的 system 字段，且从 messages 中提取到了 system message
+	if request.System == nil && systemMessage != "" {
 		claudeRequest.System = systemMessage
 	}
 
@@ -326,10 +341,15 @@ func convertMessageContent(msg *types.ChatCompletionMessage) (*Message, error) {
 	openaiContent := msg.ParseContent()
 	for _, part := range openaiContent {
 		if part.Type == types.ContentTypeText {
-			content = append(content, MessageContent{
+			msgContent := MessageContent{
 				Type: "text",
 				Text: part.Text,
-			})
+			}
+			// 传递 cache_control 字段
+			if msg.CacheControl != nil {
+				msgContent.CacheControl = msg.CacheControl
+			}
+			content = append(content, msgContent)
 			continue
 		}
 		if part.Type == types.ContentTypeImageURL {

@@ -186,7 +186,7 @@ export const CHANNEL_OPTIONS = {
     text: 'Ollama',
     value: 39,
     color: 'orange',
-    url: ''
+    url: 'https://ollama.com'
   },
   40: {
     key: 40,
@@ -263,6 +263,13 @@ export const CHANNEL_OPTIONS = {
     value: 54,
     color: 'orange',
     url: ''
+  },
+  56: {
+    key: 56,
+    text: 'xAI',
+    value: 56,
+    color: 'orange',
+    url: 'https://x.ai'
   },
   8: {
     key: 8,

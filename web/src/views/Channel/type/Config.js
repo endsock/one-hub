@@ -17,7 +17,8 @@ const defaultConfig = {
     only_chat: false,
     pre_cost: 1,
     disabled_stream: [],
-    compatible_response: false
+    compatible_response: false,
+    allow_extra_body: false
   },
   inputLabel: {
     name: '渠道名称',
@@ -37,7 +38,8 @@ const defaultConfig = {
     provider_models_list: '',
     pre_cost: '预计费选项',
     disabled_stream: '禁用流式的模型',
-    compatible_response: '兼容Response API'
+    compatible_response: '兼容Response API',
+    allow_extra_body: '允许额外字段透传'
   },
   prompt: {
     type: '请选择渠道类型',
@@ -53,7 +55,7 @@ const defaultConfig = {
     model_mapping: '模型映射关系：例如用户请求A模型，实际转发给渠道的模型为B。在B模型加前缀+，表示使用传入模型计费，例如：+gpt-3.5-turbo',
     model_headers: '自定义模型请求头，例如：{"key": "value"}',
     custom_parameter:
-      '额外参数，添加到请求体中，支持嵌套JSON结构，例如：{"temperature": 0.7, "nested": {"key": "value"}}。如果参数中存在"overwrite":true，系统则会用额外参数覆盖现有参数，如果"overwrite"不存在或者false系统则只会增加相关参数。如果参数中存在"per_model":true，系统会进一步根据模型名进行参数覆盖，例如：{"per_model":true,"gpt-3.5-turbo":{"temperature": 0.7},"gpt-4":{"temperature": 0.5}}',
+      '支持通过 JSON 注入额外参数（可嵌套）。可用控制项：overwrite：设为 true 覆盖同名字段，未设置或 false 时仅补充缺失字段；per_model：设为 true 后按模型名进行参数覆盖，如 {"per_model":true,"gpt-3.5-turbo":{"temperature": 0.7},"gpt-4":{"temperature": 0.5}}；pre_add：设为 true 时在请求入口即完成参数覆盖，否则会在发送请求前再进行参数覆盖，适用于所有渠道（含 Claude、Gemini），如 {"pre_add":true,"overwrite":true,"stream":false}。',
     groups: '请选择该渠道所支持的用户组',
     only_chat: '如果选择了仅支持聊天，那么遇到有函数调用的请求会跳过该渠道',
     provider_models_list: '必须填写所有数据后才能获取模型列表',
@@ -61,7 +63,8 @@ const defaultConfig = {
     pre_cost:
       '这里选择预计费选项，用于预估费用，如果你觉得计算图片占用太多资源，可以选择关闭图片计费。但是请注意：有些渠道在stream下是不会返回tokens的，这会导致输入tokens计算错误。',
     disabled_stream: '这里填写禁用流式的模型，注意：如果填写了禁用流式的模型，那么这些模型在流式请求时会跳过该渠道',
-    compatible_response: '兼容Response API'
+    compatible_response: '兼容Response API',
+    allow_extra_body: '开启后，将会透传用户请求中的额外字段（如OpenAI SDK的extra_body参数），适用于需要传递自定义参数到上游API的场景'
   },
   modelGroup: 'OpenAI'
 };
@@ -326,7 +329,7 @@ const typeConfig = {
       test_model: 'claude-3-haiku-20240307'
     },
     prompt: {
-      key: '按照如下格式输入：Region|AccessKeyID|SecretAccessKey|SessionToken 其中SessionToken可不填空'
+      key: '老版本Bedrock按照如下格式输入：Region|AccessKeyID|SecretAccessKey|SessionToken 其中SessionToken可不填空,新版本Bedrock按照如下格式输入：Region|Token(其中Token不能为空，Token前往新版本Bedrock控制台创建API密钥)'
     },
     modelGroup: 'Anthropic'
   },
@@ -418,12 +421,26 @@ const typeConfig = {
     modelGroup: 'Coze'
   },
   39: {
+    inputLabel: {
+      provider_models_list: '从Ollama获取模型'
+    },
     input: {
-      models: ['phi3', 'llama3']
+      base_url: 'https://ollama.com',
+      models: [
+        'glm-4.6',
+        'kimi-k2:1t',
+        'qwen3-coder:480b',
+        'deepseek-v3.1:671b',
+        'gpt-oss:120b',
+        'gpt-oss:20b',
+        'qwen3-vl:235b',
+        'minimax-m2'
+      ]
     },
     prompt: {
-      base_url: '请输入你部署的Ollama地址，例如：http://127.0.0.1:11434，如果你使用了cloudflare Zero Trust，可以在下方插件填入授权信息',
-      key: '请随意填写'
+      base_url:
+        '请输入你部署的Ollama地址或者Ollama Cloud地址，例如：http://127.0.0.1:11434或者https://ollama.com，如果你使用了cloudflare Zero Trust，可以在下方Header配置填入授权信息',
+      key: '本地部署可以随便填，Ollama Cloud请填写API KEY，获取地址https://ollama.com/settings/keys'
     }
   },
   40: {
