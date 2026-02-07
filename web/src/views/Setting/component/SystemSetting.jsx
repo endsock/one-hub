@@ -34,6 +34,9 @@ const SystemSetting = () => {
     GitHubOAuthEnabled: '',
     GitHubClientId: '',
     GitHubClientSecret: '',
+    LinuxDoOAuthEnabled: '',
+    LinuxDoClientId: '',
+    LinuxDoClientSecret: '',
     GitHubOldIdCloseEnabled: '',
     LarkAuthEnabled: '',
     LarkClientId: '',
@@ -104,6 +107,7 @@ const SystemSetting = () => {
       case 'PasswordRegisterEnabled':
       case 'EmailVerificationEnabled':
       case 'GitHubOAuthEnabled':
+      case 'LinuxDoOAuthEnabled':
       case 'GitHubOldIdCloseEnabled':
       case 'WeChatAuthEnabled':
       case 'LarkAuthEnabled':
@@ -158,6 +162,8 @@ const SystemSetting = () => {
       name === 'ServerAddress' ||
       name === 'GitHubClientId' ||
       name === 'GitHubClientSecret' ||
+      name === 'LinuxDoClientId' ||
+      name === 'LinuxDoClientSecret' ||
       name === 'OIDCClientId' ||
       name === 'OIDCClientSecret' ||
       name === 'OIDCIssuer' ||
@@ -223,6 +229,15 @@ const SystemSetting = () => {
     }
     if (originInputs['GitHubClientSecret'] !== inputs.GitHubClientSecret && inputs.GitHubClientSecret !== '') {
       await updateOption('GitHubClientSecret', inputs.GitHubClientSecret);
+    }
+  };
+
+  const submitLinuxDoOAuth = async () => {
+    if (originInputs['LinuxDoClientId'] !== inputs.LinuxDoClientId) {
+      await updateOption('LinuxDoClientId', inputs.LinuxDoClientId);
+    }
+    if (originInputs['LinuxDoClientSecret'] !== inputs.LinuxDoClientSecret && inputs.LinuxDoClientSecret !== '') {
+      await updateOption('LinuxDoClientSecret', inputs.LinuxDoClientSecret);
     }
   };
 
@@ -332,6 +347,12 @@ const SystemSetting = () => {
               <FormControlLabel
                 label={t('setting_index.systemSettings.configureLoginRegister.gitHubOAuth')}
                 control={<Checkbox checked={inputs.GitHubOAuthEnabled === 'true'} onChange={handleInputChange} name="GitHubOAuthEnabled" />}
+              />
+            </Grid>
+            <Grid xs={12} md={3}>
+              <FormControlLabel
+                label={t('setting_index.systemSettings.configureLoginRegister.linuxDoOAuth')}
+                control={<Checkbox checked={inputs.LinuxDoOAuthEnabled === 'true'} onChange={handleInputChange} name="LinuxDoOAuthEnabled" />}
               />
             </Grid>
             <Grid xs={12} md={3}>
@@ -583,6 +604,55 @@ const SystemSetting = () => {
             <Grid xs={12}>
               <Button variant="contained" onClick={submitGitHubOAuth}>
                 {t('setting_index.systemSettings.configureGitHubOAuthApp.saveButton')}
+              </Button>
+            </Grid>
+          </Grid>
+        </SubCard>
+
+        <SubCard
+          title={t('setting_index.systemSettings.configureLinuxDoOAuthApp.title')}
+          subTitle={t('setting_index.systemSettings.configureLinuxDoOAuthApp.subTitle')}
+        >
+          <Grid container spacing={{ xs: 3, sm: 2, md: 4 }}>
+            <Grid xs={12}>
+              <Alert severity="info" sx={{ wordWrap: 'break-word' }}>
+                {t('setting_index.systemSettings.configureLinuxDoOAuthApp.alert1')} <b>{inputs.ServerAddress}</b>
+                {t('setting_index.systemSettings.configureLinuxDoOAuthApp.alert2')} <b>{`${inputs.ServerAddress}/oauth/linuxdo`}</b>
+              </Alert>
+            </Grid>
+            <Grid xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel htmlFor="LinuxDoClientId">{t('setting_index.systemSettings.configureLinuxDoOAuthApp.clientId')}</InputLabel>
+                <OutlinedInput
+                  id="LinuxDoClientId"
+                  name="LinuxDoClientId"
+                  value={inputs.LinuxDoClientId || ''}
+                  onChange={handleInputChange}
+                  label={t('setting_index.systemSettings.configureLinuxDoOAuthApp.clientId')}
+                  placeholder={t('setting_index.systemSettings.configureLinuxDoOAuthApp.clientIdPlaceholder')}
+                  disabled={loading}
+                />
+              </FormControl>
+            </Grid>
+            <Grid xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel htmlFor="LinuxDoClientSecret">
+                  {t('setting_index.systemSettings.configureLinuxDoOAuthApp.clientSecret')}
+                </InputLabel>
+                <OutlinedInput
+                  id="LinuxDoClientSecret"
+                  name="LinuxDoClientSecret"
+                  value={inputs.LinuxDoClientSecret || ''}
+                  onChange={handleInputChange}
+                  label={t('setting_index.systemSettings.configureLinuxDoOAuthApp.clientSecret')}
+                  placeholder={t('setting_index.systemSettings.configureLinuxDoOAuthApp.clientSecretPlaceholder')}
+                  disabled={loading}
+                />
+              </FormControl>
+            </Grid>
+            <Grid xs={12}>
+              <Button variant="contained" onClick={submitLinuxDoOAuth}>
+                {t('setting_index.systemSettings.configureLinuxDoOAuthApp.saveButton')}
               </Button>
             </Grid>
           </Grid>

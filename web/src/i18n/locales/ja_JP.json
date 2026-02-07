@@ -475,9 +475,13 @@
   "login": {
     "codeRequired": "確認コードを入力する必要があります",
     "forgetPassword": "パスワードを忘れましたか？",
+    "linuxDoBindError": "この LinuxDo アカウントはすでに連携されています",
     "githubCountError": "エラーが発生しました。{{count}} を再試行しています...",
     "githubError": "操作が失敗し、ログイン インターフェイスにリダイレクトされました...",
     "githubLogin": "GitHub ログイン",
+    "linuxdoCountError": "エラーが発生しました。{{count}} を再試行しています...",
+    "linuxdoError": "操作が失敗し、ログイン インターフェイスにリダイレクトされました...",
+    "linuxdoLogin": "LinuxDo ログイン",
     "larkLogin": "フェイシュログイン",
     "oidcCountError": "{{count}} 回目のリトライ中にエラーが発生しました...",
     "oidcError": "操作失敗、ログインページにリダイレクト中...",
@@ -488,6 +492,7 @@
     "qrCode": "QRコード",
     "useGithubLogin": "Github を使用してログインする",
     "useLarkLogin": "フェイシュでログイン",
+    "useLinuxDoLogin": "LinuxDo でログイン",
     "useOIDCLogin": "OIDC ログインを使用する",
     "useWechatLogin": "Wechatでログイン",
     "usernameOrEmail": "ユーザー名/メール",
@@ -1072,9 +1077,21 @@
         "subTitle": "GitHub を利用したログインおよび登録をサポートするための設定です。",
         "title": "GitHub OAuth アプリの設定"
       },
+      "configureLinuxDoOAuthApp": {
+        "alert1": "ホームページ URL を入力してください",
+        "alert2": "、リダイレクト URL を入力してください",
+        "clientId": "LinuxDo クライアント ID",
+        "clientIdPlaceholder": "登録した LinuxDo OAuth アプリの ID を入力してください",
+        "clientSecret": "LinuxDo クライアントシークレット",
+        "clientSecretPlaceholder": "敏感情報はフロントエンドに送信されません",
+        "saveButton": "LinuxDo OAuth 設定を保存する",
+        "subTitle": "LinuxDo を利用したログインおよび登録をサポートするための設定です。",
+        "title": "LinuxDo OAuth アプリの設定"
+      },
       "configureLoginRegister": {
         "emailVerification": "パスワード登録時にメール認証が必要",
         "gitHubOAuth": "GitHubアカウントでのログイン＆登録を許可",
+        "linuxDoOAuth": "LinuxDoアカウントでのログイン＆登録を許可",
         "gitHubOldIdClose": "GitHub の古い ID ログインを閉じる",
         "larkAuth": "Larkでのログイン＆登録を許可",
         "oidcAuth": "OIDCアカウントを使用してログイン＆登録を許可",

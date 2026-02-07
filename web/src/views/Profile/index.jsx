@@ -37,6 +37,7 @@ import {
   showError,
   showSuccess,
   onGitHubOAuthClicked,
+  onLinuxDoOAuthClicked,
   copy,
   trims,
   onLarkOAuthClicked,
@@ -49,6 +50,7 @@ import WechatModal from 'views/Authentication/AuthForms/WechatModal';
 import { useSelector } from 'react-redux';
 import EmailModal from './component/EmailModal';
 import LarkIcon from 'assets/images/icons/lark.svg';
+import LinuxDo from 'assets/images/icons/unknown_type.svg';
 import { useTheme } from '@mui/material/styles';
 
 const validationSchema = Yup.object().shape({
@@ -565,6 +567,46 @@ export default function Profile() {
                         onClick={() => onGitHubOAuthClicked(status.github_client_id, true)}
                         sx={{ ml: 2 }}
                       >
+                        {t('profilePage.bind')}
+                      </Button>
+                    ))}
+                </ListItem>
+              )}
+              {status.linuxdo_oauth && (
+                <ListItem divider>
+                  <ListItemAvatar>
+                    <Avatar src={LinuxDo} sx={{ bgcolor: 'transparent' }} />
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={
+                      matchDownSM ? (
+                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                          <Typography variant="body1">LinuxDo</Typography>
+                          {inputs.linuxdo_id ? (
+                            <Button size="small" variant="outlined" color="error" onClick={() => handleUnbind('linuxdo')}>
+                              {t('profilePage.unbind')}
+                            </Button>
+                          ) : (
+                            <Button size="small" variant="outlined" onClick={() => onLinuxDoOAuthClicked(status.linuxdo_client_id, true)}>
+                              {t('profilePage.bind')}
+                            </Button>
+                          )}
+                        </Box>
+                      ) : (
+                        'LinuxDo'
+                      )
+                    }
+                    secondary={inputs.linuxdo_id ? `${t('profilePage.bound')}: ${inputs.linuxdo_id}` : t('profilePage.unbound')}
+                    secondaryTypographyProps={matchDownSM ? {} : { noWrap: true }}
+                    sx={matchDownSM ? {} : { minWidth: 0, mr: 2 }}
+                  />
+                  {!matchDownSM &&
+                    (inputs.linuxdo_id ? (
+                      <Button variant="outlined" color="error" onClick={() => handleUnbind('linuxdo')} sx={{ ml: 2 }}>
+                        {t('profilePage.unbind')}
+                      </Button>
+                    ) : (
+                      <Button variant="outlined" onClick={() => onLinuxDoOAuthClicked(status.linuxdo_client_id, true)} sx={{ ml: 2 }}>
                         {t('profilePage.bind')}
                       </Button>
                     ))}

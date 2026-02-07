@@ -480,9 +480,13 @@
   "login": {
     "codeRequired": "驗證碼不能為空",
     "forgetPassword": "忘記密碼？",
+    "linuxDoBindError": "該 LinuxDo 賬戶已被綁定",
     "githubCountError": "出現錯誤，第 {{count}} 次重試中...",
     "githubError": "操作失敗，正在重定向至登錄界面...",
     "githubLogin": "GitHub 登錄",
+    "linuxdoCountError": "出現錯誤，第 {{count}} 次重試中...",
+    "linuxdoError": "操作失敗，正在重定向至登錄界面...",
+    "linuxdoLogin": "LinuxDo 登錄",
     "larkLogin": "飛書 登錄",
     "oidcCountError": "出現錯誤，第 {{count}} 次重試中...",
     "oidcError": "操作失敗，正在重定向至登錄界面...",
@@ -493,6 +497,7 @@
     "qrCode": "二維碼",
     "useGithubLogin": "使用 GitHub 登錄",
     "useLarkLogin": "使用飛書登錄",
+    "useLinuxDoLogin": "使用 LinuxDo 登錄",
     "useOIDCLogin": "使用 OIDC 登錄",
     "useWechatLogin": "使用 Wechat 登錄",
     "usernameOrEmail": "用戶名/電郵",
@@ -1074,9 +1079,21 @@
         "subTitle": "用以支持通過 GitHub 進行登錄註冊，",
         "title": "配置 GitHub OAuth 應用"
       },
+      "configureLinuxDoOAuthApp": {
+        "alert1": "首頁鏈接填",
+        "alert2": "，回調 URL 填",
+        "clientId": "LinuxDo Client ID",
+        "clientIdPlaceholder": "輸入你註冊的 LinuxDo OAuth APP 的 ID",
+        "clientSecret": "LinuxDo Client Secret",
+        "clientSecretPlaceholder": "敏感信息不會發送到前端顯示",
+        "saveButton": "保存 LinuxDo OAuth 設置",
+        "subTitle": "用以支持通過 LinuxDo 進行登錄註冊",
+        "title": "配置 LinuxDo OAuth 應用"
+      },
       "configureLoginRegister": {
         "emailVerification": "通過密碼註冊時需要進行郵箱驗證",
         "gitHubOAuth": "允許通過 GitHub 賬戶登錄 & 註冊",
+        "linuxDoOAuth": "允許通過 LinuxDo 賬戶登錄 & 註冊",
         "larkAuth": "允許通過飛書登錄 & 註冊",
         "oidcAuth": "允許通過 OIDC 賬戶登錄 & 註冊",
         "passwordLogin": "允許通過密碼進行登錄",

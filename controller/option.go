@@ -59,6 +59,14 @@ func UpdateOption(c *gin.Context) {
 			})
 			return
 		}
+	case "LinuxDoOAuthEnabled":
+		if option.Value == "true" && (config.LinuxDoClientId == "" || config.LinuxDoClientSecret == "") {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "无法启用 LinuxDo OAuth，请先填入 LinuxDo Client Id 以及 LinuxDo Client Secret！",
+			})
+			return
+		}
 	case "OIDCAuthEnabled":
 		if option.Value == "true" && (config.OIDCClientId == "" || config.OIDCClientSecret == "" || config.OIDCIssuer == "" || config.OIDCScopes == "" || config.OIDCUsernameClaims == "") {
 			c.JSON(http.StatusOK, gin.H{

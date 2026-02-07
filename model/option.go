@@ -30,6 +30,7 @@ func InitOptionMap() {
 	config.GlobalOption.RegisterBool("PasswordRegisterEnabled", &config.PasswordRegisterEnabled)
 	config.GlobalOption.RegisterBool("EmailVerificationEnabled", &config.EmailVerificationEnabled)
 	config.GlobalOption.RegisterBool("GitHubOAuthEnabled", &config.GitHubOAuthEnabled)
+	config.GlobalOption.RegisterBool("LinuxDoOAuthEnabled", &config.LinuxDoOAuthEnabled)
 	config.GlobalOption.RegisterBool("WeChatAuthEnabled", &config.WeChatAuthEnabled)
 	config.GlobalOption.RegisterBool("LarkAuthEnabled", &config.LarkAuthEnabled)
 	config.GlobalOption.RegisterBool("OIDCAuthEnabled", &config.OIDCAuthEnabled)
@@ -65,6 +66,8 @@ func InitOptionMap() {
 	config.GlobalOption.RegisterString("ServerAddress", &config.ServerAddress)
 	config.GlobalOption.RegisterString("GitHubClientId", &config.GitHubClientId)
 	config.GlobalOption.RegisterString("GitHubClientSecret", &config.GitHubClientSecret)
+	config.GlobalOption.RegisterString("LinuxDoClientId", &config.LinuxDoClientId)
+	config.GlobalOption.RegisterString("LinuxDoClientSecret", &config.LinuxDoClientSecret)
 
 	config.GlobalOption.RegisterString("OIDCClientId", &config.OIDCClientId)
 	config.GlobalOption.RegisterString("OIDCClientSecret", &config.OIDCClientSecret)

@@ -108,6 +108,17 @@ export async function onGitHubOAuthClicked(github_client_id, openInNewTab = fals
   }
 }
 
+export async function onLinuxDoOAuthClicked(linuxdo_client_id, openInNewTab = false) {
+  const state = await getOAuthState();
+  if (!state) return;
+  let url = `https://connect.linux.do/oauth2/authorize?client_id=${linuxdo_client_id}&response_type=code&scope=user&state=${state}`;
+  if (openInNewTab) {
+    window.open(url);
+  } else {
+    window.location.href = url;
+  }
+}
+
 export async function getOIDCEndpoint() {
   try {
     const res = await API.get('/api/oauth/endpoint');

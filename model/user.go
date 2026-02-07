@@ -29,6 +29,7 @@ type User struct {
 	OidcId           string         `json:"oidc_id" gorm:"column:oidc_id;index"`
 	GitHubId         string         `json:"github_id" gorm:"column:github_id;index"`
 	GitHubIdNew      int            `json:"github_id_new" gorm:"column:github_id_new;index"`
+	LinuxDoId        string         `json:"linuxdo_id" gorm:"column:linuxdo_id;index"`
 	WeChatId         string         `json:"wechat_id" gorm:"column:wechat_id;index"`
 	TelegramId       int64          `json:"telegram_id" gorm:"bigint,column:telegram_id;default:0;"`
 	LarkId           string         `json:"lark_id" gorm:"column:lark_id;index"`
@@ -276,6 +277,14 @@ func (user *User) FillUserByGitHubIdNew() error {
 	return nil
 }
 
+func (user *User) FillUserByLinuxDoId() error {
+	if user.LinuxDoId == "" {
+		return errors.New("LinuxDo id 为空！")
+	}
+	DB.Where(User{LinuxDoId: user.LinuxDoId}).First(user)
+	return nil
+}
+
 func (user *User) FillUserByWeChatId() error {
 	if user.WeChatId == "" {
 		return errors.New("WeChat id 为空！")
@@ -349,6 +358,10 @@ func IsGitHubIdAlreadyTaken(githubId string) bool {
 
 func IsGitHubIdNewAlreadyTaken(githubIdNew int) bool {
 	return IsFieldAlreadyTaken("github_id_new", githubIdNew)
+}
+
+func IsLinuxDoIdAlreadyTaken(linuxDoId string) bool {
+	return IsFieldAlreadyTaken("linuxdo_id", linuxDoId)
 }
 
 func IsLarkIdAlreadyTaken(larkId string) bool {

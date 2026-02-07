@@ -17,6 +17,8 @@ const config = {
     analytics_code: '',
     github_client_id: '',
     github_oauth: false,
+    linuxdo_client_id: '',
+    linuxdo_oauth: false,
     oidc_auth: false,
     logo: '',
     quota_per_unit: 500000,

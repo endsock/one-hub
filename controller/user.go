@@ -856,6 +856,8 @@ func Unbind(c *gin.Context) {
 		updates["lark_id"] = ""
 	case "oidc":
 		updates["oidc_id"] = ""
+	case "linuxdo":
+		updates["linuxdo_id"] = ""
 	default:
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,

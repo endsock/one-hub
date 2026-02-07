@@ -499,9 +499,13 @@
   "login": {
     "codeRequired": "verification code must be filled",
     "forgetPassword": "Forgot password?",
+    "linuxDoBindError": "This LinuxDo account has already been linked",
     "githubCountError": "An error occurred, retrying {{count}}...",
     "githubError": "The operation failed and redirected to the login interface...",
     "githubLogin": "GitHub login",
+    "linuxdoCountError": "An error occurred, retrying {{count}}...",
+    "linuxdoError": "The operation failed and redirected to the login interface...",
+    "linuxdoLogin": "LinuxDo Login",
     "larkLogin": "Feishu Login",
     "oidcCountError": "An error occurred, retrying for the {{count}} time...",
     "oidcError": "Operation failed, redirecting to the login page...",
@@ -512,6 +516,7 @@
     "qrCode": "QR code",
     "useGithubLogin": "Log in using Github",
     "useLarkLogin": "Log in using Feishu",
+    "useLinuxDoLogin": "Log in using LinuxDo",
     "useOIDCLogin": "Use OIDC Login",
     "useWechatLogin": "Log in with Wechat",
     "usernameOrEmail": "Username/Email",
@@ -1083,9 +1088,21 @@
         "subTitle": "To support login and registration via GitHub.",
         "title": "Configure GitHub OAuth App"
       },
+      "configureLinuxDoOAuthApp": {
+        "alert1": "Enter Homepage URL",
+        "alert2": "and Authorization callback URL",
+        "clientId": "LinuxDo Client ID",
+        "clientIdPlaceholder": "Enter the ID of your registered LinuxDo OAuth App",
+        "clientSecret": "LinuxDo Client Secret",
+        "clientSecretPlaceholder": "Sensitive information will not be sent to the frontend",
+        "saveButton": "Save LinuxDo OAuth Settings",
+        "subTitle": "To support login and registration via LinuxDo.",
+        "title": "Configure LinuxDo OAuth App"
+      },
       "configureLoginRegister": {
         "emailVerification": "Email Verification Required for Password Register",
         "gitHubOAuth": "Allow Login & Register via GitHub",
+        "linuxDoOAuth": "Allow Login & Register via LinuxDo",
         "gitHubOldIdClose": "Disable logging in with old GitHub ID.",
         "larkAuth": "Allow Login & Register via Lark",
         "oidcAuth": "Enable login & registration via OIDC account",

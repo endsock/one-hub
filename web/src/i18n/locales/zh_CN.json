@@ -952,6 +952,7 @@
         "passwordRegister": "允许通过密码进行注册",
         "emailVerification": "通过密码注册时需要进行邮箱验证",
         "gitHubOAuth": "允许通过 GitHub 账户登录 & 注册",
+        "linuxDoOAuth": "允许通过 LinuxDo 账户登录 & 注册",
         "oidcAuth": "允许通过 OIDC 账户登录 & 注册",
         "weChatAuth": "允许通过微信登录 & 注册",
         "larkAuth": "允许通过飞书登录 & 注册",
@@ -994,6 +995,17 @@
         "clientIdPlaceholder": "输入你注册的 GitHub OAuth APP 的 ID",
         "clientSecretPlaceholder": "敏感信息不会发送到前端显示",
         "saveButton": "保存 GitHub OAuth 设置"
+      },
+      "configureLinuxDoOAuthApp": {
+        "title": "配置 LinuxDo OAuth 应用",
+        "subTitle": "用以支持通过 LinuxDo 进行登录注册",
+        "alert1": "主页链接填",
+        "alert2": "，回调 URL 填",
+        "clientId": "LinuxDo Client ID",
+        "clientSecret": "LinuxDo Client Secret",
+        "clientIdPlaceholder": "输入你注册的 LinuxDo OAuth APP 的 ID",
+        "clientSecretPlaceholder": "敏感信息不会发送到前端显示",
+        "saveButton": "保存 LinuxDo OAuth 设置"
       },
       "configureWeChatServer": {
         "title": "配置 WeChat 服务器",
@@ -1114,9 +1126,13 @@
     "wechatLoginInfo": "请使用微信扫描二维码关注公众号，输入「验证码」获取验证码（三分钟内有效）",
     "qrCode": "二维码",
     "codeRequired": "验证码不能为空",
+    "linuxDoBindError": "该 LinuxDo 账户已被绑定",
     "githubError": "操作失败，重定向至登录界面中...",
     "githubCountError": "出现错误，第 {{count}} 次重试中...",
     "githubLogin": "GitHub 登录",
+    "linuxdoError": "操作失败，重定向至登录界面中...",
+    "linuxdoCountError": "出现错误，第 {{count}} 次重试中...",
+    "linuxdoLogin": "LinuxDo 登录",
     "oidcError": "操作失败，重定向至登录界面中...",
     "oidcCountError": "出现错误，第 {{count}} 次重试中...",
     "oidcLogin": "OIDC 登录",
@@ -1124,6 +1140,7 @@
     "passwordRest": "密码重置确认",
     "useGithubLogin": "使用 Github 登录",
     "useWechatLogin": "使用 Wechat 登录",
+    "useLinuxDoLogin": "使用 LinuxDo 登录",
     "useOIDCLogin": "使用 OIDC 登录",
     "useLarkLogin": "使用飞书登录"
   },

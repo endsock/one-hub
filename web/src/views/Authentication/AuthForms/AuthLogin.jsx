@@ -35,10 +35,11 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 import Github from 'assets/images/icons/github.svg';
 import Wechat from 'assets/images/icons/wechat.svg';
+import LinuxDo from 'assets/images/icons/unknown_type.svg';
 import Lark from 'assets/images/icons/lark.svg';
 import Oidc from 'assets/images/icons/oidc.svg';
 import Webauthn from 'assets/images/icons/webauthn.svg';
-import { onGitHubOAuthClicked, onLarkOAuthClicked, onOIDCAuthClicked, onWebAuthnClicked } from 'utils/common';
+import { onGitHubOAuthClicked, onLinuxDoOAuthClicked, onLarkOAuthClicked, onOIDCAuthClicked, onWebAuthnClicked } from 'utils/common';
 import { useTranslation } from 'react-i18next';
 
 // ============================|| FIREBASE - LOGIN ||============================ //
@@ -54,7 +55,7 @@ const LoginForm = ({ ...others }) => {
   // const [checked, setChecked] = useState(true);
 
   let tripartiteLogin = false;
-  if (siteInfo.github_oauth || siteInfo.wechat_login || siteInfo.lark_client_id || siteInfo.oidc_auth) {
+  if (siteInfo.github_oauth || siteInfo.linuxdo_oauth || siteInfo.wechat_login || siteInfo.lark_client_id || siteInfo.oidc_auth) {
     tripartiteLogin = true;
   }
 
@@ -96,6 +97,27 @@ const LoginForm = ({ ...others }) => {
                     <img src={Github} alt="github" width={25} height={25} style={{ marginRight: matchDownSM ? 8 : 16 }} />
                   </Box>
                   {t('login.useGithubLogin')}
+                </Button>
+              </AnimateButton>
+            </Grid>
+          )}
+          {siteInfo.linuxdo_oauth && (
+            <Grid item xs={12}>
+              <AnimateButton>
+                <Button
+                  disableElevation
+                  fullWidth
+                  onClick={() => onLinuxDoOAuthClicked(siteInfo.linuxdo_client_id)}
+                  size="large"
+                  variant="outlined"
+                  sx={{
+                    ...theme.typography.LoginButton
+                  }}
+                >
+                  <Box sx={{ mr: { xs: 1, sm: 2, width: 20 }, display: 'flex', alignItems: 'center' }}>
+                    <img src={LinuxDo} alt="linuxdo" width={25} height={25} style={{ marginRight: matchDownSM ? 8 : 16 }} />
+                  </Box>
+                  {t('login.useLinuxDoLogin')}
                 </Button>
               </AnimateButton>
             </Grid>
