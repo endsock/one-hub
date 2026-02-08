@@ -33,6 +33,8 @@ type LinuxDoUser struct {
 	Username       string `json:"username"`
 	Name           string `json:"name"`
 	AvatarTemplate string `json:"avatar_template"`
+	Active         bool   `json:"active"`
+	TrustLevel     int    `json:"trust_level"`
 }
 
 func getLinuxDoUserInfoByCode(code string) (*LinuxDoUser, error) {
@@ -163,6 +165,13 @@ func LinuxDoOAuth(c *gin.Context) {
 
 	linuxDoId := strconv.Itoa(linuxDoUser.Id)
 	if user == nil {
+		if !linuxDoUser.Active || linuxDoUser.TrustLevel < 1 {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "LinuxDo 账户未满足注册条件（active=true 且 trust_level>=1）",
+			})
+			return
+		}
 		if !config.RegisterEnabled {
 			c.JSON(http.StatusOK, gin.H{
 				"success": false,
