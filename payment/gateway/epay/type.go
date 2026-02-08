@@ -3,7 +3,7 @@ package epay
 type PayType string
 
 var (
-	EpayPay PayType = ""       // 网关
+	EpayPay PayType = "epay"   // 易支付协议固定值
 	Alipay  PayType = "alipay" // 支付宝
 	Wechat  PayType = "wxpay"  // 微信
 	QQ      PayType = "qqpay"  // QQ
