@@ -185,14 +185,7 @@ func LinuxDoOAuth(c *gin.Context) {
 			user.InviterId = inviterId
 		}
 
-		if linuxDoUser.Username != "" {
-			user.Username = linuxDoUser.Username
-		} else {
-			user.Username = "linuxdo_" + strconv.Itoa(model.GetMaxUserId()+1)
-		}
-		if model.IsUsernameAlreadyTaken(user.Username) {
-			user.Username = "linuxdo_" + strconv.Itoa(model.GetMaxUserId()+1)
-		}
+		user.Username = "linuxdo_" + linuxDoId
 
 		if linuxDoUser.Name != "" {
 			user.DisplayName = linuxDoUser.Name
