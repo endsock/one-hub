@@ -53,7 +53,7 @@ func (p *ClaudeProvider) CreateClaudeChatStream(request *ClaudeRequest) (request
 	chatHandler := &ClaudeRelayStreamHandler{
 		Usage:     p.Usage,
 		ModelName: request.Model,
-		Prefix:    `data: {"type"`,
+		Prefix:    `data: {`,
 	}
 
 	// 发送请求
