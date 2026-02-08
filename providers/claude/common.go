@@ -86,7 +86,8 @@ func ClaudeUsageToOpenaiUsage(cUsage *Usage, usage *types.Usage) bool {
 	usage.PromptTokensDetails.CachedWriteTokens = cUsage.CacheCreationInputTokens
 	usage.PromptTokensDetails.CachedReadTokens = cUsage.CacheReadInputTokens
 
-	usage.PromptTokens = cUsage.InputTokens + cUsage.CacheCreationInputTokens + cUsage.CacheReadInputTokens
+	//usage.PromptTokens = cUsage.InputTokens + cUsage.CacheCreationInputTokens + cUsage.CacheReadInputTokens
+	usage.PromptTokens = cUsage.InputTokens
 	usage.CompletionTokens = cUsage.OutputTokens
 	usage.TotalTokens = usage.PromptTokens + usage.CompletionTokens
 
