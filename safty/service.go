@@ -47,6 +47,11 @@ func convertToString(data interface{}) (string, error) {
 		for _, item := range v {
 			if text, ok := item.(map[string]interface{}); ok {
 				if textType, ok := text["type"].(string); ok && textType == "text" {
+					// 尝试 text 字段 (Claude格式)
+					if textContent, ok := text["text"].(string); ok {
+						return textContent, nil
+					}
+					// 尝试 content 字段 (其他格式)
 					if textContent, ok := text["content"].(string); ok {
 						return textContent, nil
 					}
