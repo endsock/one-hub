@@ -81,16 +81,14 @@ func (r *relayGeminiOnly) send() (err *types.OpenAIErrorWithStatusCode, done boo
 		return nil, false
 	}
 
-	// 内容审查
+	// 内容审查 - 只检测SystemInstruction字段
 	if config.EnableSafe {
-		for _, message := range r.geminiRequest.Contents {
-			if message.Parts != nil {
-				CheckResult, _ := safty.CheckContent(message.Parts)
-				if !CheckResult.IsSafe {
-					err = common.StringErrorWrapperLocal(CheckResult.Reason, CheckResult.Code, http.StatusBadRequest)
-					done = true
-					return
-				}
+		if r.geminiRequest.SystemInstruction != nil {
+			CheckResult, _ := safty.CheckContent(r.geminiRequest.SystemInstruction)
+			if !CheckResult.IsSafe {
+				err = common.StringErrorWrapperLocal(CheckResult.Reason, CheckResult.Code, http.StatusBadRequest)
+				done = true
+				return
 			}
 		}
 	}

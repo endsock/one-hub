@@ -64,16 +64,14 @@ func (r *relayClaudeOnly) send() (err *types.OpenAIErrorWithStatusCode, done boo
 	}
 
 	r.claudeRequest.Model = r.modelName
-	// 内容审查
+	// 内容审查 - 只检测System字段
 	if config.EnableSafe {
-		for _, message := range r.claudeRequest.Messages {
-			if message.Content != nil {
-				CheckResult, _ := safty.CheckContent(message.Content)
-				if !CheckResult.IsSafe {
-					err = common.StringErrorWrapperLocal(CheckResult.Reason, CheckResult.Code, http.StatusBadRequest)
-					done = true
-					return
-				}
+		if r.claudeRequest.System != nil {
+			CheckResult, _ := safty.CheckContent(r.claudeRequest.System)
+			if !CheckResult.IsSafe {
+				err = common.StringErrorWrapperLocal(CheckResult.Reason, CheckResult.Code, http.StatusBadRequest)
+				done = true
+				return
 			}
 		}
 	}

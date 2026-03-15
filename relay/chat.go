@@ -103,10 +103,10 @@ func (r *relayChat) send() (err *types.OpenAIErrorWithStatusCode, done bool) {
 	}
 
 	r.chatRequest.Model = r.modelName
-	// 内容审查
+	// 内容审查 - 只检测system和developer消息
 	if config.EnableSafe {
 		for _, message := range r.chatRequest.Messages {
-			if message.Content != nil {
+			if (message.Role == types.ChatMessageRoleSystem || message.Role == types.ChatMessageRoleDeveloper) && message.Content != nil {
 				CheckResult, _ := safty.CheckContent(message.Content)
 				if !CheckResult.IsSafe {
 					err = common.StringErrorWrapperLocal(CheckResult.Reason, CheckResult.Code, http.StatusBadRequest)

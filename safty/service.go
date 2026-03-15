@@ -1,6 +1,7 @@
 package safty
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"one-api/common/config"
@@ -54,8 +55,12 @@ func convertToString(data interface{}) (string, error) {
 		}
 		return "", nil
 	default:
-		// 尝试使用反射获取字符串表示
-		return fmt.Sprintf("%v", v), nil
+		// 使用json序列化为字符串
+		jsonBytes, err := json.Marshal(v)
+		if err != nil {
+			return fmt.Sprintf("%v", v), nil
+		}
+		return string(jsonBytes), nil
 	}
 }
 
