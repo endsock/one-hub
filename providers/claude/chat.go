@@ -108,8 +108,28 @@ func (p *ClaudeProvider) getChatRequest(claudeRequest *ClaudeRequest) (*http.Req
 		headers["anthropic-beta"] = "output-128k-2025-02-19"
 	}
 
+	// 检查是否需要透传额外字段
+	var requestBody interface{} = claudeRequest
+	if p.Channel.AllowExtraBody {
+		// 将 claudeRequest 转换为 map
+		requestBytes, err := json.Marshal(claudeRequest)
+		if err != nil {
+			return nil, common.ErrorWrapperLocal(err, "marshal_request_failed", http.StatusInternalServerError)
+		}
+
+		var requestMap map[string]interface{}
+		err = json.Unmarshal(requestBytes, &requestMap)
+		if err != nil {
+			return nil, common.ErrorWrapperLocal(err, "unmarshal_request_failed", http.StatusInternalServerError)
+		}
+
+		// 从原始请求中获取额外字段并合并
+		requestMap = p.mergeExtraBodyFromRawRequest(requestMap)
+		requestBody = requestMap
+	}
+
 	// 创建请求
-	req, err := p.Requester.NewRequest(http.MethodPost, fullRequestURL, p.Requester.WithBody(claudeRequest), p.Requester.WithHeader(headers))
+	req, err := p.Requester.NewRequest(http.MethodPost, fullRequestURL, p.Requester.WithBody(requestBody), p.Requester.WithHeader(headers))
 	if err != nil {
 		return nil, common.ErrorWrapperLocal(err, "new_request_failed", http.StatusInternalServerError)
 	}

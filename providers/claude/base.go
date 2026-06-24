@@ -87,6 +87,29 @@ func (p *ClaudeProvider) GetFullRequestURL(requestURL string) string {
 	return fmt.Sprintf("%s%s", baseURL, requestURL)
 }
 
+// mergeExtraBodyFromRawRequest 从原始请求中合并额外字段
+func (p *ClaudeProvider) mergeExtraBodyFromRawRequest(requestMap map[string]interface{}) map[string]interface{} {
+	rawBody, ok := p.GetRawBody()
+	if !ok || rawBody == nil {
+		return requestMap
+	}
+
+	var rawRequest map[string]interface{}
+	err := json.Unmarshal(rawBody, &rawRequest)
+	if err != nil {
+		return requestMap
+	}
+
+	// 以处理后的请求为基础，从原始请求中添加额外字段
+	for key, value := range rawRequest {
+		if _, exists := requestMap[key]; !exists {
+			requestMap[key] = value
+		}
+	}
+
+	return requestMap
+}
+
 func stopReasonClaude2OpenAI(reason string) string {
 	switch reason {
 	case "end_turn", "stop_sequence":
