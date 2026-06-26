@@ -87,7 +87,7 @@ func (p *ClaudeProvider) GetFullRequestURL(requestURL string) string {
 	return fmt.Sprintf("%s%s", baseURL, requestURL)
 }
 
-// mergeExtraBodyFromRawRequest 从原始请求中合并额外字段
+// mergeExtraBodyFromRawRequest 从原始请求中仅合并 metadata 字段
 func (p *ClaudeProvider) mergeExtraBodyFromRawRequest(requestMap map[string]interface{}) map[string]interface{} {
 	rawBody, ok := p.GetRawBody()
 	if !ok || rawBody == nil {
@@ -100,10 +100,9 @@ func (p *ClaudeProvider) mergeExtraBodyFromRawRequest(requestMap map[string]inte
 		return requestMap
 	}
 
-	// 以处理后的请求为基础，从原始请求中添加额外字段
-	for key, value := range rawRequest {
-		if _, exists := requestMap[key]; !exists {
-			requestMap[key] = value
+	if metadata, exists := rawRequest["metadata"]; exists {
+		if _, exists := requestMap["metadata"]; !exists {
+			requestMap["metadata"] = metadata
 		}
 	}
 
