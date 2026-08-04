@@ -37,7 +37,7 @@ func (p *VertexAIProvider) CreateClaudeChatStream(request *claude.ClaudeRequest)
 
 	chatHandler := &claude.ClaudeRelayStreamHandler{
 		Usage:     p.Usage,
-		ModelName: request.Model,
+		ModelName: p.GetOriginalModel(),
 		Prefix:    `data: {`,
 	}
 

@@ -103,6 +103,11 @@ func (r *relayClaudeOnly) send() (err *types.OpenAIErrorWithStatusCode, done boo
 			r.heartbeat.Stop()
 		}
 
+		// 将响应中的 model 改回请求中的原始 model
+		if originalModel := r.getOriginalModel(); originalModel != "" {
+			response.Model = originalModel
+		}
+
 		openErr := responseJsonClient(r.c, response)
 
 		if openErr != nil {

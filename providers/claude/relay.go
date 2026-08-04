@@ -52,7 +52,7 @@ func (p *ClaudeProvider) CreateClaudeChatStream(request *ClaudeRequest) (request
 
 	chatHandler := &ClaudeRelayStreamHandler{
 		Usage:     p.Usage,
-		ModelName: request.Model,
+		ModelName: p.GetOriginalModel(),
 		Prefix:    `data: {`,
 	}
 
@@ -114,6 +114,10 @@ func (h *ClaudeRelayStreamHandler) HandlerStream(rawLine *[]byte, dataChan chan 
 	case "message_start":
 		ClaudeUsageToOpenaiUsage(&claudeResponse.Message.Usage, h.Usage)
 		h.StartUsage = &claudeResponse.Message.Usage
+		// 将 message.model 改回请求中的原始 model
+		if h.ModelName != "" {
+			rawStr = rewriteClaudeStreamModel(rawStr, noSpaceLine, h.ModelName, h.AddEvent)
+		}
 	case "message_delta":
 		ClaudeUsageMerge(&claudeResponse.Usage, h.StartUsage)
 		ClaudeUsageToOpenaiUsage(&claudeResponse.Usage, h.Usage)
@@ -127,4 +131,25 @@ func (h *ClaudeRelayStreamHandler) HandlerStream(rawLine *[]byte, dataChan chan 
 		event := "\n"
 		dataChan <- event
 	}
+}
+
+// rewriteClaudeStreamModel 改写 SSE message_start 中的 model 字段
+func rewriteClaudeStreamModel(rawStr string, jsonBody []byte, modelName string, addEvent bool) string {
+	var payload map[string]interface{}
+	if err := json.Unmarshal(jsonBody, &payload); err != nil {
+		return rawStr
+	}
+	msg, ok := payload["message"].(map[string]interface{})
+	if !ok {
+		return rawStr
+	}
+	msg["model"] = modelName
+	modified, err := json.Marshal(payload)
+	if err != nil {
+		return rawStr
+	}
+	if addEvent {
+		return fmt.Sprintf("data: %s\n", string(modified))
+	}
+	return "data: " + string(modified)
 }
