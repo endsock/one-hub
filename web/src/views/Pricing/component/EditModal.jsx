@@ -361,7 +361,7 @@ const EditModal = ({
   useEffect(() => {
     if (open) {
       setUnitType('rate');
-      setLocalUnit('K');
+      setLocalUnit(unit);
     }
   }, [open]);
 
