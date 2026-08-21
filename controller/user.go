@@ -779,6 +779,56 @@ type ChangeUserQuotaRequest struct {
 	Remark string `json:"remark" form:"remark"`
 }
 
+type SetUserQuotaRequest struct {
+	Quota  int    `json:"quota" form:"quota"`
+	Remark string `json:"remark" form:"remark"`
+}
+
+// SetUserQuota 将用户额度直接设置为指定值
+func SetUserQuota(c *gin.Context) {
+	userId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+	var req SetUserQuotaRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.APIRespondWithError(c, http.StatusOK, err)
+		return
+	}
+
+	if req.Quota < 0 {
+		common.APIRespondWithError(c, http.StatusOK, errors.New("额度不能为负数"))
+		return
+	}
+
+	oldQuota, err := model.SetUserQuotaValue(userId, req.Quota)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	diff := req.Quota - oldQuota
+	remark := fmt.Sprintf("管理员设置用户额度为 %s (原额度 %s, 差额 %s)", common.LogQuota(req.Quota), common.LogQuota(oldQuota), common.LogQuota(diff))
+
+	if req.Remark != "" {
+		remark = fmt.Sprintf("%s, 备注: %s", remark, req.Remark)
+	}
+
+	model.RecordQuotaLog(userId, model.LogTypeManage, diff, c.ClientIP(), remark)
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+	})
+}
+
 func ChangeUserQuota(c *gin.Context) {
 	userId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

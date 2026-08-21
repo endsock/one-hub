@@ -597,6 +597,25 @@ func ChangeUserQuota(id int, quota int, isRecharge bool) (err error) {
 	return nil
 }
 
+// SetUserQuotaValue 将用户额度直接设置为指定值，返回修改前的额度
+func SetUserQuotaValue(id int, quota int) (oldQuota int, err error) {
+	err = DB.Model(&User{}).Where("id = ?", id).Select("quota").Find(&oldQuota).Error
+	if err != nil {
+		return 0, err
+	}
+
+	err = DB.Model(&User{}).Where("id = ?", id).Update("quota", quota).Error
+	if err != nil {
+		return 0, err
+	}
+
+	if config.RedisEnabled {
+		redis.RedisDel(fmt.Sprintf(UserQuotaCacheKey, id))
+	}
+
+	return oldQuota, nil
+}
+
 // WebAuthn 相关方法，实现 webauthn.User 接口
 func (user *User) WebAuthnID() []byte {
 	return []byte(fmt.Sprintf("%d", user.Id))
