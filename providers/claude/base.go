@@ -1,6 +1,8 @@
 package claude
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -74,6 +76,17 @@ func (p *ClaudeProvider) GetRequestHeaders() (headers map[string]string) {
 		anthropicVersion = "2023-06-01"
 	}
 	headers["anthropic-version"] = anthropicVersion
+
+	if p.Context != nil {
+		token := p.Context.GetString("request_token")
+		if token == "" {
+			token = strings.TrimPrefix(p.Context.GetHeader("x-api-key"), "Bearer ")
+		}
+		if token != "" {
+			sum := md5.Sum([]byte(token))
+			headers["TIME_U_FINGER"] = hex.EncodeToString(sum[:])
+		}
+	}
 
 	return headers
 }
