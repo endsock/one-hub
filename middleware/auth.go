@@ -115,6 +115,7 @@ func RootAuth() func(c *gin.Context) {
 
 func tokenAuth(c *gin.Context, key string) {
 	key = strings.TrimPrefix(key, "Bearer ")
+	c.Set("request_token", key)
 	key = strings.TrimPrefix(key, "sk-")
 
 	if len(key) < 48 {

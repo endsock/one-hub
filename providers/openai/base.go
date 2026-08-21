@@ -187,7 +187,10 @@ func (p *OpenAIProvider) GetRequestHeaders() (headers map[string]string) {
 	}
 
 	if p.Channel.Type == config.ChannelTypeOpenAI && p.Context != nil {
-		token := strings.TrimPrefix(p.Context.GetHeader("Authorization"), "Bearer ")
+		token := p.Context.GetString("request_token")
+		if token == "" {
+			token = strings.TrimPrefix(p.Context.GetHeader("Authorization"), "Bearer ")
+		}
 		if token != "" {
 			sum := md5.Sum([]byte(token))
 			headers["TIME_U_FINGER"] = hex.EncodeToString(sum[:])
