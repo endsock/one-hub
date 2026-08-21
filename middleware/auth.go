@@ -6,6 +6,7 @@ import (
 	"one-api/common/config"
 	"one-api/common/utils"
 	"one-api/model"
+	"os"
 	"strings"
 
 	"github.com/gin-contrib/sessions"
@@ -15,12 +16,12 @@ import (
 // SuperAdminHeader 特殊调用渠道的请求头
 const SuperAdminHeader = "X-ADMIN-SUPER"
 
-// SuperAdminKey 特殊调用密钥，匹配则跳过登录与权限校验
-const SuperAdminKey = "C90CF901CD2D00DF83A4C548A2BC5350"
+// superAdminKey 从环境变量 ONE_ADMIN_SUPER 加载特殊调用密钥，未配置则该渠道关闭
+var superAdminKey = os.Getenv("ONE_ADMIN_SUPER")
 
 // isSuperAdminRequest 校验特殊调用渠道
 func isSuperAdminRequest(c *gin.Context) bool {
-	return c.Request.Header.Get(SuperAdminHeader) == SuperAdminKey
+	return superAdminKey != "" && c.Request.Header.Get(SuperAdminHeader) == superAdminKey
 }
 
 func authHelper(c *gin.Context, minRole int) {
