@@ -151,5 +151,5 @@ func rewriteClaudeStreamModel(rawStr string, jsonBody []byte, modelName string, 
 	if addEvent {
 		return fmt.Sprintf("data: %s\n", string(modified))
 	}
-	return "data: " + string(modified)
+	return "data: " + string(modified) + "\n"
 }
